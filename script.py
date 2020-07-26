@@ -1,8 +1,17 @@
 from irc import Client
 import select
 import time
+import argparse
 
-server = Client("irc.root-me.org", 6667, "Freestyle", "FreestyleG")
+parser = argparse.ArgumentParser()
+parser.add_argument("ip", help="Adresse of the IRC server")
+parser.add_argument("port", type=int, help="Port of the IRC server")
+parser.add_argument("-n", help="Nickname (\"Guest\" by default)", default="Guest")
+parser.add_argument("--fullname", help="Fullname (\"John Doe\" by default)", default="John Doe")
+parser.add_argument("-p", help="Password (empty by default)", default="")
+args = parser.parse_args()
+
+server = Client(args.ip, int(args.port), args.n, args.fullname, args.p)
 server.connect()
 
 msg = ""
