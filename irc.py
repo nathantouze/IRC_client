@@ -18,6 +18,7 @@ class Client:
         """Connect the user into the IRC server"""
         self.socket.connect((self.addr, self.port))
         self.connected = True
+        self.socket.setblocking(True)
         print("Connected to " + self.addr + ":{}".format(self.port))
 
     def login(self):
@@ -28,7 +29,7 @@ class Client:
         self.logged = True
 
     def getResponse(self):
-        return self.socket.recv(4096)
+        return self.socket.recv(8192)
 
     def disconnect(self):
         """Disconnect the user from the IRC server"""
@@ -43,10 +44,8 @@ class Client:
         self.sendCommand("JOIN " + channel)
 
     def sendCommand(self, cmd=str):
+        """Send a command to the IRC server and wait for the response"""
         self.socket.send((cmd + "\r\n").encode())
-        data = self.getResponse()
-        print(data.decode())
-        return data.decode()
 
     def pingHandler(self):
         data = self.getResponse()
@@ -57,6 +56,14 @@ class Client:
         else:
             return data.decode()
 
+    def isDisconnected(self, data=bytes):
+        clearedData = data.decode().split("\n")
+        clearedData = clearedData[len(clearedData) - 2]
+        if clearedData.startswith('ERROR :Closing link:') is True:
+            self.connected = False
+            return True
+        else:
+            return False
     def __del__(self):
         if self.socket is not None:
             self.socket.close()
