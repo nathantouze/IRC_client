@@ -14,8 +14,49 @@ class Client:
         self.connected = False
         self.logged = False
 
+    def ask_config(self):
+        """Ask the mandatory options to the user"""
+        self.addr = input("Ip address: ")
+
+        next_step = False
+        while next_step is False:
+            tmp = input("Port (6667): ")
+            if tmp == "":
+                next_step = True
+            elif type(tmp) is int or (type(tmp) is str and tmp.isdigit() is True):
+                self.port = int(tmp)
+                next_step = True
+            else:
+                print("Please enter a valid port.")
+
+        next_step = False
+        while next_step is False:
+            tmp = input("Nickname (\"Guest\"): ")
+            if tmp == "":
+                next_step = True
+            elif len(tmp) <= 31:
+                next_step = True
+                self.nickname = tmp
+            else:
+                print("Invalid nickname (over 31 characters).")
+        
+        next_step = False
+        while next_step is False:
+            tmp = input("Real Name (\"John Doe\"): ")
+            if tmp == "":
+                next_step = True
+            elif len(tmp) <= 31:
+                next_step = True
+                self.nickname = tmp
+        
+        self.password = input("Password (press enter if empty): ")
+
+
     def connect(self):
         """Connect the user into the IRC server"""
+        if self.addr is None:
+            print("No ip address given.")
+            return
         self.socket.connect((self.addr, self.port))
         self.connected = True
         self.socket.setblocking(True)
