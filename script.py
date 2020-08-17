@@ -27,7 +27,7 @@ while server.connected is True:
     for socket in readable:
         data = socket.recv(8192)
         print(data.decode())
-        if server.isDisconnected(data) is True:
+        if server.is_disconnected(data) is True:
             break
     if server.connected is False:
         continue
@@ -35,10 +35,12 @@ while server.connected is True:
         if server.logged == False:
             server.login()
             time.sleep(1.1)
-            print(socket.recv(8192).decode() + "\nYou are logged in !\n\n")
+            message = socket.recv(8192).decode()
+            if server.message_handling(message) is False:
+                server.connected = False
             break
         while msg == "":
             msg = input("> ")
-        server.sendCommand(msg)
+        server.send_command(msg)
         time.sleep(0.1)
         msg = ""

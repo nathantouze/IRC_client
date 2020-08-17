@@ -1,5 +1,6 @@
 import socket
 import time
+import re
 
 class Client:
     """Class IRC client"""
@@ -16,7 +17,14 @@ class Client:
 
     def ask_config(self):
         """Ask the mandatory options to the user"""
-        self.addr = input("Ip address: ")
+
+        next_step = False
+        while next_step is False:
+            self.addr = input("Ip address: ")
+            if self.addr == "":
+                print("Please write something.")
+            else:
+                next_step = True
 
         next_step = False
         while next_step is False:
@@ -54,7 +62,7 @@ class Client:
 
     def connect(self):
         """Connect the user into the IRC server"""
-        if self.addr is None:
+        if self.addr is None or self.addr == "":
             print("No ip address given.")
             return
         self.socket.connect((self.addr, self.port))
@@ -63,33 +71,33 @@ class Client:
         print("Connected to " + self.addr + ":{}".format(self.port))
 
     def login(self):
-        self.sendCommand("NICK " + self.nickname)
-        self.sendCommand("USER " + self.nickname + " "  + self.nickname + " " + self.nickname + " :" + self.fullname)
+        self.send_command("NICK " + self.nickname)
+        self.send_command("USER " + self.nickname + " "  + self.nickname + " " + self.nickname + " :" + self.fullname)
         if self.password != "":
-            self.sendCommand("PASS " + self.password)
+            self.send_command("PASS " + self.password)
         self.logged = True
 
-    def getResponse(self):
+    def get_response(self):
         return self.socket.recv(8192)
 
     def disconnect(self):
         """Disconnect the user from the IRC server"""
         print("Disconnecting from the server...")
-        self.sendCommand("QUIT :Bye")
+        self.send_command("QUIT :Bye")
         self.connected = False
 
-    def sendTo(self, user, text):
-        self.sendCommand("PRIVMSG " + user + ":" + text)
+    def send_to(self, user, text):
+        self.send_command("PRIVMSG " + user + ":" + text)
 
     def join(self, channel):
-        self.sendCommand("JOIN " + channel)
+        self.send_command("JOIN " + channel)
 
-    def sendCommand(self, cmd=str):
+    def send_command(self, cmd=str):
         """Send a command to the IRC server and wait for the response"""
         self.socket.send((cmd + "\r\n").encode())
 
-    def pingHandler(self):
-        data = self.getResponse()
+    def ping_handler(self):
+        data = self.get_response()
         if data.find(b"PING") != -1:
             pong = data.decode().split(':')[1]
             self.socket.send(pong.encode())
@@ -97,7 +105,7 @@ class Client:
         else:
             return data.decode()
 
-    def isDisconnected(self, data=bytes):
+    def is_disconnected(self, data=bytes):
         clearedData = data.decode().split("\n")
         clearedData = clearedData[len(clearedData) - 2]
         if clearedData.startswith('ERROR :Closing link:') is True:
@@ -105,6 +113,15 @@ class Client:
             return True
         else:
             return False
+    
+    def message_handling(self, msg):
+        msg_array = msg.split("\r\n")
+        for line in msg_array:
+            print(line)
+            if re.search(r" [4-5][0-9]{2} \* " + self.nickname, line):
+                return False
+        return True
+
     def __del__(self):
         if self.socket is not None:
             self.socket.close()
